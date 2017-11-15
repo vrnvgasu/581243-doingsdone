@@ -16,15 +16,44 @@ $date_deadline = date("d.m.Y", $task_deadline_ts);
 $days_until_deadline = floor(($current_ts-$task_deadline_ts)/86400);
 
 $projects = ['Все', 'Входящие', 'Учеба', 'Работа', 'Домашние дела', 'Авто'];
-$tasks = [
-        'Собеседование в IT компании' => ['01.06.2018', 'Работа', 'Нет'],
-        'Выполнить тестовое задание' => ['25.05.2018', 'Работа', 'Нет'],
-        'Сделать задание первого раздела' => ['21.04.2018', 'Учеба', 'Да'],
-        'Встреча с другом' => ['22.04.2018', 'Входящие', 'Нет'],
-        'Купить корм для кота' => ['Нет', 'Домашние дела', 'Нет'],
-        'Заказать пиццу' => ['Нет', 'Домашние дела', 'Нет'],
-]
-
+$items = [
+        [
+            'title' => 'Собеседование в IT компании',
+            'date' => '01.06.2018',
+            'category' => 'Работа',
+            'state' => false
+        ],
+        [
+            'title' => 'Выполнить тестовое задание',
+            'date' => '25.05.2018',
+            'category' => 'Работа',
+            'state' => false
+        ],
+        [
+            'title' => 'Сделать задание первого раздела',
+            'date' => '21.04.2018',
+            'category' => 'Учеба',
+            'state' => true
+        ],
+        [
+            'title' => 'Встреча с другом',
+            'date' => '22.04.2018',
+            'category' => 'Входящие',
+            'state' => false
+        ],
+        [
+            'title' => 'Купить корм для кота',
+            'date' => false,
+            'category' => 'Домашние дела',
+            'state' => false
+        ],
+        [
+            'title' => 'Заказать пиццу',
+            'date' => false,
+            'category' => 'Домашние дела',
+            'state' => false
+        ]
+    ];
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -109,7 +138,7 @@ $tasks = [
                 </div>
 
                 <table class="tasks">
-                    <?php foreach ($tasks as $key => $task): ?>
+                    <?php foreach ($items as $task): ?>
                     <?php /*if ($show_complete_tasks == 1):*/?><!--
                     <tr class="tasks__item task task--completed">
                         <td class="task__select">
@@ -131,14 +160,14 @@ $tasks = [
                         <td class="task__select">
                             <label class="checkbox task__checkbox">
                                 <input class="checkbox__input visually-hidden" type="checkbox">
-                                <a href="/"><span class="checkbox__text"><?=$key?></span></a>
+                                <a href="/"><span class="checkbox__text"><?=$task['title']?></span></a>
                             </label>
                         </td>
 
                         <td class="task__file">
                         </td>
 
-                            <td class="task__date"><?=$task[0]?></td>
+                            <td class="task__date"><?=$task['date']?></td>
                     </tr>
                     <?php endforeach; ?>
 
