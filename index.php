@@ -156,7 +156,7 @@ $items = [
 
 <!--                    Добавьте класс task--important, если до выполнения задачи меньше дня-->
                         <tr class="tasks__item task
- +                            <?php if ($days_until_deadline >= 0) echo " task--important"; ?>">
+                            <?php if ($days_until_deadline >= 0) echo " task--important"; ?>">
                         <td class="task__select">
                             <label class="checkbox task__checkbox">
                                 <input class="checkbox__input visually-hidden" type="checkbox">
