@@ -54,6 +54,16 @@ $items = [
             'state' => false
         ]
     ];
+
+    function countItemsInProject ($project, $items) {
+        $count = 0;
+        foreach ($items as $item) {
+            if ($item['category'] === $project) $count++;
+        }
+
+        return $count;
+    }
+
 ?>
 <!DOCTYPE html>
 <html lang="ru">
@@ -101,7 +111,7 @@ $items = [
                         <?php foreach ($projects as $project): ?>
                         <li class="main-navigation__list-item<?php if ($projects[0] == $project) echo ' main-navigation__list-item--active'; ?>">
                             <a class="main-navigation__list-item-link" href="#"><?=$project?></a>
-                            <span class="main-navigation__list-item-count">24</span>
+                            <span class="main-navigation__list-item-count"><?=countItemsInProject ($project, $items)?></span>
                         </li>
                         <?php endforeach; ?>
                     </ul>
