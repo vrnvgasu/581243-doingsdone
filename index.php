@@ -56,11 +56,25 @@ $items = [
             'state' => false
         ]
     ];
+$itemsForPrint=array();
+if ($_GET['numb'] && $projects[$_GET['numb']]) {
+    foreach ($items as $item) {
+        if ($item['category'] === $projects[$_GET['numb']]) {
+            $itemsForPrint[] = $item;
+        }
+    }
+} else {
+    foreach ($items as $item) {
+        $itemsForPrint[] = $item;
+    }
+}
 
 $title = 'Дела в порядке';
 
-$content = include_template('templates/index.php', ['items' => $items, 'days_until_deadline'=>$days_until_deadline]);
-
+$content = include_template('templates/index.php', ['itemsForPrint' => $itemsForPrint, 'days_until_deadline'=>$days_until_deadline]);
+if ($_GET['numb'] && !$projects[$_GET['numb']]) {
+    $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
+}
 
 $html = include_template('templates/layout.php', [
     'content'=>$content,
@@ -69,7 +83,6 @@ $html = include_template('templates/layout.php', [
     'title' => $title]);
 
 print_r($html);
-
 
 function countItemsInProject ($project, $items) {
     $count = 0;
