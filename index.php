@@ -73,11 +73,11 @@ print_r($html);
 
 function countItemsInProject ($project, $items) {
     $count = 0;
+    if ($project === 'Все') {
+        return count($items);
+    }
     foreach ($items as $item) {
         if ($item['category'] === $project) $count++;
-    }
-    if ($project === 'Все') {
-        $count = count($items);
     }
 
     return $count;
