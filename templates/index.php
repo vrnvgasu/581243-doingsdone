@@ -26,7 +26,7 @@
                 </div>
 
                 <table class="tasks">
-                    <?php foreach ($arrTemplate['items'] as $task): ?>
+                    <?php foreach ($arrTemplate['itemsForPrint'] as $task): ?>
                     <?php /*if ($show_complete_tasks == 1):*/?><!--
                     <tr class="tasks__item task task--completed">
                         <td class="task__select">
