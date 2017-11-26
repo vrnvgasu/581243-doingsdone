@@ -27,25 +27,16 @@
 
                 <table class="tasks">
                     <?php foreach ($arrTemplate['itemsForPrint'] as $task): ?>
-                    <?php /*if ($show_complete_tasks == 1):*/?><!--
-                    <tr class="tasks__item task task--completed">
-                        <td class="task__select">
-                            <label class="checkbox task__checkbox">
-                                <input class="checkbox__input visually-hidden" type="checkbox" checked>
-                                <span class="checkbox__text">Записаться на интенсив "Базовый PHP"</span>
-                            </label>
-                        </td>
-                        <td class="task__date">10.04.2017</td>
-
-                        <td class="task__controls">
-                        </td>
-                    </tr>
-                    --><?php /*endif; */?>
-
 <!--                    Добавьте класс task--important, если до выполнения задачи меньше дня-->
-
                         <tr class="tasks__item task
-                            <?php if ($arrTemplate['days_until_deadline'] >= 0) echo " task--important"; ?>">
+                            <?php
+                                $task_deadline_ts = strtotime($task['date']); // метка времени даты выполнения задачи
+                                $current_ts = strtotime('now midnight'); // текущая метка времени
+
+                                // в эту переменную запишите кол-во дней до даты задачи
+                                $days_until_deadline = floor(($current_ts-$task_deadline_ts)/86400);
+                                if ($days_until_deadline >= 0) echo " task--important";
+                            ?>">
                         <td class="task__select">
                             <label class="checkbox task__checkbox">
                                 <input class="checkbox__input visually-hidden" type="checkbox">

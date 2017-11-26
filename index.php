@@ -7,15 +7,7 @@ $show_complete_tasks = rand(0, 1);
 // устанавливаем часовой пояс в Московское время
 date_default_timezone_set('Europe/Moscow');
 
-$days = rand(-3, 3);
-$task_deadline_ts = strtotime("+" . $days . " day midnight"); // метка времени даты выполнения задачи
-$current_ts = strtotime('now midnight'); // текущая метка времени
 
-// запишите сюда дату выполнения задачи в формате дд.мм.гггг
-$date_deadline = date("d.m.Y", $task_deadline_ts);
-
-// в эту переменную запишите кол-во дней до даты задачи
-$days_until_deadline = floor(($current_ts-$task_deadline_ts)/86400);
 
 $projects = ['Все', 'Входящие', 'Учеба', 'Работа', 'Домашние дела', 'Авто'];
 $items = [
@@ -56,31 +48,65 @@ $items = [
             'state' => false
         ]
     ];
-$itemsForPrint=array();
-if ($_GET['numb'] && $projects[$_GET['numb']]) {
-    foreach ($items as $item) {
-        if ($item['category'] === $projects[$_GET['numb']]) {
-            $itemsForPrint[] = $item;
-        }
-    }
-} else {
-    foreach ($items as $item) {
-        $itemsForPrint[] = $item;
-    }
-}
 
 $title = 'Дела в порядке';
 
-$content = include_template('templates/index.php', ['itemsForPrint' => $itemsForPrint, 'days_until_deadline'=>$days_until_deadline]);
+if ($_POST['submit_task']) {
+    if(!$_POST['name']) {
+        $taskErrorName = 'form__input--error';
+        $error = true;
+    }
+    if(!$_POST['project']) {
+        $taskErrorProject = 'form__input--error';
+        $error = true;
+    }
+    if ($error) {
+        $add = 'task';
+        $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
+    } else {
+        addNewTask(htmlspecialchars($_REQUEST['name']), $_REQUEST['date'], $_REQUEST['project']);
+        if ($_FILES) {
+            addFile();
+        }
+    }
+}
+if ($_POST['submit_project']) {
+    if(!$_POST['name']) {
+        $taskErrorName = 'form__input--error';
+        $error = true;
+    }
+    if ($error) {
+        $add = 'project';
+        $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
+    } else {
+        addNewProject(htmlspecialchars($_REQUEST['name']));
+    }
+}
+
+if (isset($_GET['numb'])) {
+    $numb = htmlspecialchars($_GET['numb']);
+}
+
+$itemsForPrint = itemsForPrint ();
+
+$content = include_template('templates/index.php', ['itemsForPrint'=>$itemsForPrint]);
 if ($_GET['numb'] && !$projects[$_GET['numb']]) {
     $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
 }
 
+if (isset($_GET['add']) && !$_REQUEST['submit_task']) {
+    $add = htmlspecialchars($_GET['add']);
+    $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
+}
+
 $html = include_template('templates/layout.php', [
     'content'=>$content,
+    'modal'=>$form['modal'],
     'projects'=>$projects,
-    'items' => $items,
-    'title' => $title]);
+    'items'=>$items,
+    'title'=>$title,
+    'numb'=>$numb,
+    'overlay'=>$form['overlay']]);
 
 print_r($html);
 
@@ -94,4 +120,58 @@ function countItemsInProject ($project, $items) {
     }
 
     return $count;
+}
+
+function showForm($add, $taskErrorName, $taskErrorProject, $projects) {
+    $overlay = 'overlay';
+    $modal = include_template('templates/form.php',
+            ['add'=>$add,
+            'taskErrorProject'=>$taskErrorProject,
+            'taskErrorName'=>$taskErrorName,
+            'projects'=>$projects]);
+    $form = ['overlay'=>$overlay, 'modal'=>$modal];
+    return $form;
+}
+
+function addNewTask($title, $date = false, $category, $state = false) {
+    $newTask = [
+        'title' => $title,
+        'date' => $date,
+        'category' => $category,
+        'state' => $state
+    ];
+    global $items;
+    array_unshift($items, $newTask);
+
+};
+
+function addNewProject($newProject) {
+    global $projects;
+    array_splice($projects, 1, 0, $newProject);
+}
+
+function itemsForPrint () {
+    global $numb;
+    global $projects;
+    global $items;
+    $itemsForPrint = array();
+    if (isset($numb) && $projects[$numb] && ($projects[$numb] !== $projects[0])) {
+        foreach ($items as $item) {
+            if ($item['category'] === $projects[$_GET['numb']]) {
+                $itemsForPrint[] = $item;
+            }
+        }
+    } else {
+        foreach ($items as $item) {
+            $itemsForPrint[] = $item;
+        }
+    }
+    return $itemsForPrint;
+}
+
+function addFile () {
+    $file_name = $_FILES['preview']['name'];
+    $file_path = __DIR__ . '/uploads/';
+
+    move_uploaded_file($_FILES['preview']['tmp_name'], $file_path.$file_name);
 }
