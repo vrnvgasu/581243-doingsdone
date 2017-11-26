@@ -99,6 +99,17 @@ if (isset($_GET['add']) && !$_REQUEST['submit_task']) {
     $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
 }
 
+if (htmlspecialchars($_GET['show_completed']) == 1) {
+    $show_completed = htmlspecialchars($_GET['show_completed']);
+    if (isset($_COOKIE['show_completed'])) {
+        unset($_COOKIE['show_completed']);
+        setcookie ('show_completed','', time()-3600);
+    } else {
+        setcookie ('show_completed', 1, time()+3600);
+    }
+    header("Location: index.php");
+}
+
 $html = include_template('templates/layout.php', [
     'content'=>$content,
     'modal'=>$form['modal'],
@@ -109,6 +120,9 @@ $html = include_template('templates/layout.php', [
     'overlay'=>$form['overlay']]);
 
 print_r($html);
+
+
+
 
 function countItemsInProject ($project, $items) {
     $count = 0;

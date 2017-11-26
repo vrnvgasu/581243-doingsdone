@@ -16,10 +16,10 @@
                     </nav>
 
                     <label class="checkbox">
-                        <a href="/">
+                        <a href="?show_completed=1">
                             <!--добавить сюда аттрибут "checked", если переменная $show_complete_tasks равна единице-->
                             <input class="checkbox__input visually-hidden" type="checkbox"
-                                <?php if ($show_complete_tasks == 1) echo "checked"?> >
+                                <?php if ($_COOKIE['show_completed'] == 1) echo "checked"?> >
                             <span class="checkbox__text">Показывать выполненные</span>
                         </a>
                     </label>
@@ -36,6 +36,9 @@
                                 // в эту переменную запишите кол-во дней до даты задачи
                                 $days_until_deadline = floor(($current_ts-$task_deadline_ts)/86400);
                                 if ($days_until_deadline >= 0) echo " task--important";
+                            ?>
+                            <?php
+                                if (!$_COOKIE['show_completed'] && $task['state']) echo " hidden";
                             ?>">
                         <td class="task__select">
                             <label class="checkbox task__checkbox">
