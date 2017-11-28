@@ -1,5 +1,7 @@
 <?php
+session_start();
 require_once "function.php";
+require_once "userdata.php";
 
 // показывать или нет выполненные задачи
 $show_complete_tasks = rand(0, 1);
@@ -110,6 +112,78 @@ if (htmlspecialchars($_GET['show_completed']) == 1) {
     header("Location: index.php");
 }
 
+if (!$_POST['submit_register']&&!$_POST['submit_login']) {
+    $guest = include_template('templates/guest.php', []);
+    $register = include_template('templates/register.php', []);
+    $login = include_template('templates/login.php', []);
+}
+
+
+if (!isset($_SESSION['login'])) {
+    if (htmlspecialchars($_GET['log']) === 'in') {
+        $notLog = $login;
+    } else if (htmlspecialchars($_GET['log']) === 'register') {
+        $notLog = $register;
+    } else {
+        $notLog = $guest;
+    }
+}
+if ($_POST['submit_register']) {
+    if(!htmlspecialchars($_POST['email'])) {
+        $taskErrorEmail = 'form__input--error';
+        $error = true;
+    }
+    if(!htmlspecialchars($_POST['password'])) {
+        $taskErrorPassword = 'form__input--error';
+        $error = true;
+    }
+    if(!htmlspecialchars($_POST['name'])) {
+        $taskErrorName = 'form__input--error';
+        $error = true;
+    }
+    if ($error) {
+        $notLog = include_template('templates/register.php', [
+            'taskErrorPassword'=>$taskErrorPassword,
+            'taskErrorName'=>$taskErrorName
+        ]);
+    } else {
+        $newUser = [
+            'email' => htmlspecialchars($_POST['email']),
+            'name' => htmlspecialchars($_POST['name']),
+            'password' => password_hash( htmlspecialchars($_POST['password']), PASSWORD_DEFAULT)
+        ];
+        $users[] = $newUser;
+        $User = [
+            'name' => htmlspecialchars($_POST['name']),
+            'password' => htmlspecialchars($_POST['password'])
+        ];
+        authentication($User);
+    }
+}
+if ($_POST['submit_login']) {
+    //print_r('asldkfjasldkfj');
+    if(!htmlspecialchars($_POST['name'])) {
+        $taskErrorName = 'form__input--error';
+        $error = true;
+    }
+    if(!htmlspecialchars($_POST['password'])) {
+        $taskErrorPassword = 'form__input--error';
+        $error = true;
+    }
+    if ($error) {
+        $notLog = include_template('templates/login.php', [
+            'taskErrorPassword'=>$taskErrorPassword,
+            'taskErrorName'=>$taskErrorName
+        ]);
+    } else {
+        $User = [
+            'name' => htmlspecialchars($_POST['name']),
+            'password' => htmlspecialchars($_POST['password'])
+        ];
+        $notLog = authentication($User);
+    }
+}
+
 $html = include_template('templates/layout.php', [
     'content'=>$content,
     'modal'=>$form['modal'],
@@ -117,11 +191,11 @@ $html = include_template('templates/layout.php', [
     'items'=>$items,
     'title'=>$title,
     'numb'=>$numb,
-    'overlay'=>$form['overlay']]);
+    'overlay'=>$form['overlay'],
+    'notLog'=>$notLog,
+    'session'=>$session]);
 
 print_r($html);
-
-
 
 
 function countItemsInProject ($project, $items) {
