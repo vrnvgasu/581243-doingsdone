@@ -61,3 +61,26 @@
         </div>
     </form>
 </div>
+
+<div class="modal" <?php if($arrTemplate['log'] !== 'login') echo "hidden"; ?> >
+    <button class="modal__close" type="button" name="button">Закрыть</button>
+
+    <h2 class="modal__heading">Войти</h2>
+
+    <form class="form"  action="index.php" method="post">
+        <div class="form__row">
+            <label class="form__label" for="login_name">NAME <sup>*</sup></label>
+
+            <input class="form__input <?=$arrTemplate['taskErrorName']?>" type="text" name="name" id="login_name" value="" placeholder="Введите логин">
+        </div>
+        <div class="form__row">
+            <label class="form__label" for="login_password">PASSWORD <sup>*</sup></label>
+
+            <input class="form__input <?=$arrTemplate['taskErrorName']?>" type="text" name="password" id="login_password" value="" placeholder="Введите пароль">
+        </div>
+
+        <div class="form__row form__row--controls">
+            <input class="button" type="submit" name="submit_project" value="Добавить">
+        </div>
+    </form>
+</div>

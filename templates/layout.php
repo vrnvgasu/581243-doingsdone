@@ -8,15 +8,17 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<body class="<?=$arrTemplate['overlay']?>">
-<h1 class="visually-hidden">Дела в порядке</h1>
-<div class="page-wrapper">
-    <div class="container container--with-sidebar">
-        <header class="main-header">
-            <a href="#">
-                <img src="img/logo.png" width="153" height="42" alt="Логотип Дела в порядке">
-            </a>
-
+<?php if(!$_SESSION['login']): ?>
+    <?=$arrTemplate['notLog']?>
+<?php else: ?>
+    <body class="<?=$arrTemplate['overlay']?>">
+    <h1 class="visually-hidden">Дела в порядке</h1>
+    <div class="page-wrapper">
+        <div class="container container--with-sidebar">
+            <header class="main-header">
+                <a href="#">
+                    <img src="img/logo.png" width="153" height="42" alt="Логотип Дела в порядке">
+                </a>
             <div class="main-header__side">
                 <a class="main-header__side-item button button--plus" href="?add=task">Добавить задачу</a>
 
@@ -26,9 +28,8 @@
                     </div>
 
                     <div class="user-menu__data">
-                        <p>Константин</p>
-
-                        <a href="#">Выйти</a>
+                        <p><?=$_SESSION['name']?></p>
+                        <a href="/logout.php">Выйти</a>
                     </div>
                 </div>
             </div>
@@ -59,6 +60,8 @@
         </div>
     </div>
 </div>
+
+<?php endif; ?>
 
 <footer class="main-footer">
     <div class="container">
