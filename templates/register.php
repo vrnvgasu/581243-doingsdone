@@ -25,7 +25,11 @@
 
                         <input class="form__input <?=$arrTemplate['taskErrorEmail']?>" type="email" name="email" id="email" value="" placeholder="Введите e-mail">
 
-                        <p class="form__message <?php if (!$arrTemplate['taskErrorEmail']) echo " hidden"; ?>">E-mail введён некорректно</p>
+                        <p class="form__message
+                        <?php if (!$arrTemplate['taskErrorEmail']) {
+                            echo " hidden";
+                        } ?>
+                        ">E-mail введён некорректно</p>
                     </div>
 
                     <div class="form__row">
@@ -33,7 +37,11 @@
 
                         <input class="form__input <?=$arrTemplate['taskErrorPassword']?>" type="password" name="password" id="password" value="" placeholder="Введите пароль">
 
-                        <p class="form__message <?php if (!$arrTemplate['taskErrorPassword']) echo " hidden"; ?>">Пароль введён некорректно</p>
+                        <p class="form__message
+                        <?php if (!$arrTemplate['taskErrorPassword']) {
+                            echo " hidden";
+                        } ?>
+                        ">Пароль введён некорректно</p>
                     </div>
 
                     <div class="form__row">
@@ -41,7 +49,11 @@
 
                         <input class="form__input <?=$arrTemplate['taskErrorName']?>" type="text" name="name" id="name" value="" placeholder="Введите имя">
 
-                        <p class="form__message <?php if (!$arrTemplate['taskErrorName']) echo " hidden"; ?>">Имя введёно некорректно</p>
+                        <p class="form__message
+                        <?php if (!$arrTemplate['taskErrorName']) {
+                            echo " hidden";
+                        } ?>
+                        ">Имя введёно некорректно</p>
                     </div>
 
                     <div class="form__row form__row--controls">

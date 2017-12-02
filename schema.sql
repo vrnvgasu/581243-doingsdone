@@ -27,7 +27,8 @@ CREATE TABLE `items` (
   `password` TINYTEXT CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `contacts` TEXT CHARACTER SET utf8 COLLATE utf8_general_ci,
   PRIMARY KEY (`id`),
-  UNIQUE(`email`, `name`)
+  UNIQUE(`email`),
+  UNIQUE(`name`)
 ) ENGINE = InnoDB;
 	
   CREATE INDEX `ind_title` ON `items` (`title`);
