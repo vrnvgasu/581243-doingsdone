@@ -2,6 +2,7 @@
 session_start();
 require_once "function.php";
 require_once "userdata.php";
+require_once "init.php";
 
 // показывать или нет выполненные задачи
 $show_complete_tasks = rand(0, 1);
@@ -182,6 +183,13 @@ if ($_POST['submit_login']) {
         ];
         $notLog = authentication($User);
     }
+}
+
+if (isset($errorBD)) {
+    print_r($errorBD);
+    $content = include_template('templates/error.php', [
+        'errorBD'=>$errorBD,
+    ]);
 }
 
 $html = include_template('templates/layout.php', [
