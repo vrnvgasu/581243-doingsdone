@@ -1,4 +1,7 @@
-<div class="modal" <?php if($arrTemplate['add'] !== 'task') echo "hidden"; ?> >
+<div class="modal"
+    <?php if($arrTemplate['add'] !== 'task') {
+        echo "hidden";
+    } ?> >
     <button class="modal__close" type="button" name="button">Закрыть</button>
 
     <h2 class="modal__heading">Добавление задачи</h2>
@@ -15,9 +18,11 @@
 
             <select class="form__input form__input--select <?=$arrTemplate['taskErrorProject']?>" name="project" id="project">
                 <?php foreach ($arrTemplate['projects'] as $project): ?>
-                <option value="<?php if ($project !== 'Все') echo $project ?>"><?=$project?></option>
-                <?php endforeach;
-?>            </select>
+                <option value="<?php if ($project !== 'Все') {
+                    echo $project;
+                } ?>"><?=$project?></option>
+                <?php endforeach; ?>
+            </select>
         </div>
 
         <div class="form__row">
@@ -44,7 +49,10 @@
     </form>
 </div>
 
-<div class="modal" <?php if($arrTemplate['add'] !== 'project') echo "hidden"; ?> >
+<div class="modal"
+    <?php if($arrTemplate['add'] !== 'project') {
+        echo "hidden";
+    } ?> >
     <button class="modal__close" type="button" name="button">Закрыть</button>
 
     <h2 class="modal__heading">Добавление проекта</h2>
@@ -62,7 +70,10 @@
     </form>
 </div>
 
-<div class="modal" <?php if($arrTemplate['log'] !== 'login') echo "hidden"; ?> >
+<div class="modal"
+    <?php if($arrTemplate['log'] !== 'login') {
+        echo "hidden";
+    } ?> >
     <button class="modal__close" type="button" name="button">Закрыть</button>
 
     <h2 class="modal__heading">Войти</h2>
