@@ -18,10 +18,7 @@
                     <label class="checkbox">
                         <a href="?show_completed=1">
                             <!--добавить сюда аттрибут "checked", если переменная $show_complete_tasks равна единице-->
-                            <input class="checkbox__input visually-hidden" type="checkbox"
-                                <?php if ($_COOKIE['show_completed'] == 1) {
-                                    echo "checked";
-                                }?> >
+                            <input class="checkbox__input visually-hidden" type="checkbox"<?=($_COOKIE['show_completed'] == 1)? "checked":''?>>
                             <span class="checkbox__text">Показывать выполненные</span>
                         </a>
                     </label>
@@ -29,25 +26,16 @@
 
                 <table class="tasks">
                     <?php foreach ($arrTemplate['itemsForPrint'] as $task): ?>
-<!--                    Добавьте класс task--important, если до выполнения задачи меньше дня-->
-                        <tr class="tasks__item task
-                            <?php
-                                $task_deadline_ts = strtotime($task['date']); // метка времени даты выполнения задачи
-                                $current_ts = strtotime('now midnight'); // текущая метка времени
-
-                                // в эту переменную запишите кол-во дней до даты задачи
-                                $days_until_deadline = floor(($current_ts-$task_deadline_ts)/86400);
-                                if ($days_until_deadline >= 0) {
-                                    echo " task--important";
-                                }
-                            ?>
-                            <?php
-                                if (!$_COOKIE['show_completed'] && $task['state']) echo " hidden";
-                            ?>">
+                        <?php
+                        $task_deadline_ts = strtotime($task['date']); // метка времени даты выполнения задачи
+                        $current_ts = strtotime('now midnight'); // текущая метка времени
+                        $days_until_deadline = floor(($current_ts-$task_deadline_ts)/86400);
+                        ?>
+                        <tr class="tasks__item task <?=($days_until_deadline >= 0)?" task--important":''?><?=($task['state'])?" task--completed":''?><?=(!$_COOKIE['show_completed'] && $task['state'])?" hidden":''?>">
                         <td class="task__select">
                             <label class="checkbox task__checkbox">
                                 <input class="checkbox__input visually-hidden" type="checkbox">
-                                <a href="/"><span class="checkbox__text"><?=$task['title']?></span></a>
+                                <a href="?task_is_done=<?=$task['id']?>"><span class="checkbox__text"><?=$task['title']?></span></a>
                             </label>
                         </td>
 
