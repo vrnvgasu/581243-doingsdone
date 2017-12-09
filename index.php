@@ -77,7 +77,7 @@ if ($_SESSION['name']) {
                 WHERE `project` = '" . $project . "' AND
                 `users_id` = '" . $userId . "'";
             $result = mysqli_query($con, $sql);
-            $errorBD = showErrorBD($errorBD, $con, $result);
+            $errorBD = showErrorBD($con, $result);
             $projectId = mysqli_fetch_row($result);
             $projectId = $projectId[0];
             addNewTask($_POST['name'], $url_file, $date, $userId, $projectId, $con);

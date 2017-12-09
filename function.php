@@ -10,6 +10,12 @@ function showErrorBD($con, $result) {
        return $errorBD = mysqli_error($con);
     }
 }
+function showErrorBDInFunction($con, $result) {
+    if ( !$result ) {
+        $arrTemplate['errorBD'] = mysqli_error($con);
+        require_once "templates/error.php";
+    }
+}
 
 function createItems($rows) {
     $i = 0;
@@ -31,10 +37,12 @@ function createItems($rows) {
 }
 
 function countItemsInProject ($projectName, $con, $userId) {
+    $id = mysqli_real_escape_string($con, $userId);
     if ($projectName === 'Все') {
         $sql = "SELECT `title` FROM `items` 
-        WHERE `users_id` = '" . $userId . "'";
+        WHERE `users_id` = '" . $id . "'";
         $result = mysqli_query($con, $sql);
+        showErrorBDInFunction($con, $result);
         $count = mysqli_num_rows($result);
 
     } else {
@@ -44,8 +52,9 @@ function countItemsInProject ($projectName, $con, $userId) {
         JOIN `projects` `p`
         ON `i`.`projects_id` =  `p`.`id`
         WHERE `p`.`project` = '" . $project . "' AND
-        `i`.`users_id` = '" . $userId . "'";
+        `i`.`users_id` = '" . $id . "'";
         $result = mysqli_query($con, $sql);
+        showErrorBDInFunction($con, $result);
         $count = mysqli_num_rows($result);
     }
 
@@ -75,10 +84,12 @@ function addNewTask($title, $url_file = false, $date = false, $users_id, $projec
 
 function addNewProject($newProject, $con, $userId) {
     $project = mysqli_real_escape_string($con, $newProject);
+    $id = mysqli_real_escape_string($con, $userId);
     $sql = "SELECT `project` FROM `projects` 
             WHERE `project` = '" . $project . "' AND
-            `users_id` = '" . $userId . "'";
+            `users_id` = '" . $id . "'";
     $result = mysqli_query($con, $sql);
+    showErrorBDInFunction($con, $result);
     $count = mysqli_num_rows($result);
     if ($count) {
         return 'У вас уже есть такой проект';
@@ -94,11 +105,16 @@ function addNewProject($newProject, $con, $userId) {
 
 
 function addFile () {
-    $file_name = rand(1,10000).rand(1,10000).$_FILES['preview']['name'];
+    if (substr($_FILES['preview']['name'], -3) == 'php') {
+        $file_name = getmypid() .date('U'). basename($_FILES['preview']['name'], 'php') . 'txt';
+    } else if (substr($_FILES['preview']['name'], -2) == 'js') {
+        $file_name = getmypid() .date('U'). basename($_FILES['preview']['name'], 'js') . 'txt';
+    } else {
+        $file_name = getmypid() .date('U'). $_FILES['preview']['name'];
+    }
+
     $file_path = __DIR__ . '\\uploads\\' . $file_name;
-
     move_uploaded_file($_FILES['preview']['tmp_name'], $file_path);
-
     return $file_path;
 }
 
