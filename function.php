@@ -22,13 +22,14 @@ function createItems($rows) {
     foreach ($rows as $item) {
         $items[$i]['title'] = $item[2];
         $items[$i]['date'] = $item[3];
-        $items[$i]['category'] = $item[5];
+        $items[$i]['category'] = $item[6];
         $items[$i]['id'] = $item[4];
         if ($item[1]) {
             $items[$i]['state'] = true;
         } else {
             $items[$i]['state'] = false;
         }
+        $items[$i]['file'] = $item[5];
 
         $i++;
     }
@@ -117,5 +118,3 @@ function addFile () {
     move_uploaded_file($_FILES['preview']['tmp_name'], $file_path);
     return $file_path;
 }
-
-

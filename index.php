@@ -105,6 +105,9 @@ if ($_SESSION['name']) {
         if (isset($_GET['numb'])) {
             $numb = htmlspecialchars($_GET['numb']);
         }
+        if (isset($_GET['item-filter'])) {
+            $itemFilter = htmlspecialchars($_GET['item-filter']);
+        }
 
         if (isset($numb) && $projects[$numb] && ($projects[$numb] !== $projects[0])) {
             $project = mysqli_real_escape_string($con, $projects[$numb]);
@@ -116,18 +119,64 @@ if ($_SESSION['name']) {
             $projectId = mysqli_fetch_row($result);
             $projectId = $projectId[0];
 
-            $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `project`  FROM `items` `i`
-        JOIN `projects` `p`
-        ON `i`.`projects_id` =  `p`.`id`
-        WHERE `i`.`projects_id` = '" . $projectId . "'";
+            if (isset($itemFilter)) {
+                switch ($itemFilter) {
+                    case 'today':
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `project`, `url_file`  FROM `items` `i`
+                            JOIN `projects` `p`
+                            ON `i`.`projects_id` =  `p`.`id`
+                            WHERE `i`.`projects_id` = '" . $projectId . "' AND
+                            `i`.`date_deadline` = CURDATE() ";
+                        break;
+                    case 'tomorrow':
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
+                            JOIN `projects` `p`
+                            ON `i`.`projects_id` =  `p`.`id`
+                            WHERE `i`.`projects_id` = '" . $projectId . "' AND
+                            `i`.`date_deadline` = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
+                        break;
+                    case 'late':
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
+                            JOIN `projects` `p`
+                            ON `i`.`projects_id` =  `p`.`id`
+                            WHERE `i`.`projects_id` = '" . $projectId . "' AND
+                            `i`.`date_deadline` < CURDATE()";
+                        break;
+                }
+            } else {
+                $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
+                    JOIN `projects` `p`
+                    ON `i`.`projects_id` =  `p`.`id`
+                    WHERE `i`.`projects_id` = '" . $projectId . "'";
+            }
             $result = mysqli_query($con, $sql);
             $errorBD = showErrorBD($con, $result);
             $rows = mysqli_fetch_all($result);
             $items = createItems($rows);
 
         } else {
-            $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`  FROM `items` 
-        WHERE `users_id` = '" . $userId . "'";
+            if (isset($itemFilter)) {
+                switch ($itemFilter) {
+                    case 'today':
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`   FROM `items` 
+                            WHERE `users_id` = '" . $userId . "' AND
+                            `date_deadline` = CURDATE() ";
+                        break;
+                    case 'tomorrow':
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
+                            WHERE `users_id` = '" . $userId . "' AND
+                            `date_deadline` = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
+                        break;
+                    case 'late':
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
+                          WHERE `users_id` = '" . $userId . "' AND
+                            `date_deadline` < CURDATE()";
+                        break;
+                }
+            } else {
+                $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
+                    WHERE `users_id` = '" . $userId . "'";
+            }
             $result = mysqli_query($con, $sql);
             $errorBD = showErrorBD($con, $result);
             $rows = mysqli_fetch_all($result);
@@ -139,8 +188,7 @@ if ($_SESSION['name']) {
         }
     }
 
-
-    $content = include_template('templates/index.php', ['itemsForPrint' => $items]);
+    $content = include_template('templates/index.php', ['itemsForPrint' => $items, 'itemFilter'=>$itemFilter]);
     if ($_GET['numb'] && !$projects[$_GET['numb']]) {
         $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
     }
@@ -286,7 +334,3 @@ $html = include_template('templates/layout.php', [
     'userId'=>$userId]);
 
 print_r($html);
-
-
-
-
