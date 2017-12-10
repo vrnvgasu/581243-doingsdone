@@ -1,7 +1,5 @@
 <?php
 
-
-// пользователи для аутентификации
 $users = [
     [
         'email' => 'ignat.v@gmail.com',

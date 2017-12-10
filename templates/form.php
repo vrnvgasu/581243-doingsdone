@@ -15,9 +15,7 @@
 
             <select class="form__input form__input--select <?=$arrTemplate['taskErrorProject']?>" name="project" id="project">
                 <?php foreach ($arrTemplate['projects'] as $project): ?>
-                <option value="<?php if ($project !== 'Все') {
-                    echo $project;
-                } ?>"><?=$project?></option>
+                <option value="<?=($project['project'] !== 'Все')?$project['project']:""?>"><?=$project['project']?></option>
                 <?php endforeach; ?>
             </select>
         </div>
@@ -64,4 +62,3 @@
         </div>
     </form>
 </div>
-

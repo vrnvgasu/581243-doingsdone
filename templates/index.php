@@ -3,21 +3,19 @@
 
                 <form class="search-form" action="index.html" method="post">
                     <input class="search-form__input" type="text" name="" value="" placeholder="Поиск по задачам">
-
                     <input class="search-form__submit" type="submit" name="" value="Искать">
                 </form>
 
                 <div class="tasks-controls">
                     <nav class="tasks-switch">
-                        <a href="/" class="tasks-switch__item tasks-switch__item--active">Все задачи</a>
-                        <a href="/" class="tasks-switch__item">Повестка дня</a>
-                        <a href="/" class="tasks-switch__item">Завтра</a>
-                        <a href="/" class="tasks-switch__item">Просроченные</a>
+                        <a href="/" class="tasks-switch__item<?=(!$arrTemplate['itemFilter'])? " tasks-switch__item--active":""?>">Все задачи</a>
+                        <a href="/?item-filter=today" class="tasks-switch__item<?=($arrTemplate['itemFilter']=='today')? " tasks-switch__item--active":""?>">Повестка дня</a>
+                        <a href="/?item-filter=tomorrow" class="tasks-switch__item<?=($arrTemplate['itemFilter']=='tomorrow')? " tasks-switch__item--active":""?>">Завтра</a>
+                        <a href="/?item-filter=late" class="tasks-switch__item<?=($arrTemplate['itemFilter']=='late')? " tasks-switch__item--active":""?>">Просроченные</a>
                     </nav>
 
                     <label class="checkbox">
                         <a href="?show_completed=1">
-                            <!--добавить сюда аттрибут "checked", если переменная $show_complete_tasks равна единице-->
                             <input class="checkbox__input visually-hidden" type="checkbox"<?=($_COOKIE['show_completed'] == 1)? "checked":''?>>
                             <span class="checkbox__text">Показывать выполненные</span>
                         </a>
@@ -40,27 +38,11 @@
                         </td>
 
                         <td class="task__file">
+                            <a class="download-link" href="/download.php?fileName=<?=basename($task['file'])?>" <?=(basename($task['file']))? :" hidden"?> target="_blank"><?=basename($task['file'])?></a>
                         </td>
 
                             <td class="task__date"><?=$task['date']?></td>
                     </tr>
                     <?php endforeach; ?>
-
-                    <!--показывать следующий тег <tr/>, если переменная равна единице-->
-                    <tr class="tasks__item task task--completed">
-                        <td class="task__select">
-                            <label class="checkbox task__checkbox">
-                                <input class="checkbox__input visually-hidden" type="checkbox" checked>
-                                <a href="/"><span class="checkbox__text">Сделать главную страницу Дела в порядке</span></a>
-                            </label>
-
-                        </td>
-
-                        <td class="task__file">
-                            <a class="download-link" href="#">Home.psd</a>
-                        </td>
-
-                        <td class="task__date"><!--выведите здесь дату выполнения задачи--></td>
-                    </tr>
                 </table>
             </main>

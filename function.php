@@ -22,13 +22,14 @@ function createItems($rows) {
     foreach ($rows as $item) {
         $items[$i]['title'] = $item[2];
         $items[$i]['date'] = $item[3];
-        $items[$i]['category'] = $item[5];
+        $items[$i]['category'] = $item[6];
         $items[$i]['id'] = $item[4];
         if ($item[1]) {
             $items[$i]['state'] = true;
         } else {
             $items[$i]['state'] = false;
         }
+        $items[$i]['file'] = $item[5];
 
         $i++;
     }
@@ -36,29 +37,28 @@ function createItems($rows) {
     return $items;
 }
 
-function countItemsInProject ($projectName, $con, $userId) {
-    $id = mysqli_real_escape_string($con, $userId);
-    if ($projectName === 'Все') {
-        $sql = "SELECT `title` FROM `items` 
-        WHERE `users_id` = '" . $id . "'";
-        $result = mysqli_query($con, $sql);
-        showErrorBDInFunction($con, $result);
-        $count = mysqli_num_rows($result);
+function countItemsInProject ($con, $userId) {
+    $sql = "SELECT `projects_id`, COUNT(*) FROM `items`
+        WHERE `users_id` = ?
+        GROUP BY `projects_id`";
+    $stmt = mysqli_stmt_init($con);
+    if (!mysqli_stmt_prepare($stmt, $sql)) {
+        showErrorBDInFunction($con, false);
+    }
+    mysqli_stmt_bind_param($stmt, 'i', $userId);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $rows = mysqli_fetch_all($result);
 
-    } else {
-        $project = mysqli_real_escape_string($con, $projectName);
-
-        $sql = "SELECT `title` FROM `items` `i`
-        JOIN `projects` `p`
-        ON `i`.`projects_id` =  `p`.`id`
-        WHERE `p`.`project` = '" . $project . "' AND
-        `i`.`users_id` = '" . $id . "'";
-        $result = mysqli_query($con, $sql);
-        showErrorBDInFunction($con, $result);
-        $count = mysqli_num_rows($result);
+    $i=0;
+    foreach ($rows as $row) {
+        $count[$i]['projectId'] = $row[0];
+        $count[$i]['itemsCount'] = $row[1];
+        $i++;
     }
 
-    return $count;
+
+   return $count;
 }
 
 function showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat) {
@@ -99,7 +99,7 @@ function addNewProject($newProject, $con, $userId) {
             VALUES (NULL, ?, ?)";
     $stmt = mysqli_prepare($con, $sql);
     mysqli_stmt_bind_param($stmt, 'si', $newProject, $userId);
-     mysqli_stmt_execute($stmt);
+    mysqli_stmt_execute($stmt);
     header("Location: index.php");
 }
 
@@ -117,5 +117,3 @@ function addFile () {
     move_uploaded_file($_FILES['preview']['tmp_name'], $file_path);
     return $file_path;
 }
-
-

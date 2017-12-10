@@ -41,13 +41,11 @@
 
                 <nav class="main-navigation">
                     <ul class="main-navigation__list">
-                        <?php $i = 0;?>
                         <?php foreach ($arrTemplate['projects'] as $project): ?>
-                        <li class="main-navigation__list-item<?=($arrTemplate['projects'][0] == $project)? ' main-navigation__list-item--active':''?>">
-                            <a class="main-navigation__list-item-link" href="<?='?numb='.$i++?>"><?=$project?></a>
-                            <span class="main-navigation__list-item-count"><?=countItemsInProject ($project, $arrTemplate['con'],  $arrTemplate['userId'])?></span>
+                        <li class="main-navigation__list-item<?=($project['id']==intval($_GET['numb']))? ' main-navigation__list-item--active':''?>">
+                            <a class="main-navigation__list-item-link" href="?numb=<?=$project['id']?>"><?=$project['project']?></a>
+                            <span class="main-navigation__list-item-count"><?=$project['countItems']?></span>
                         </li>
-
                         <?php endforeach; ?>
                     </ul>
                 </nav>
