@@ -9,30 +9,60 @@ $title = 'Дела в порядке';
 
 if ($_SESSION['name']) {
     $sql = "SELECT `id` FROM `users` 
-        WHERE `name` = '" . $_SESSION['name'] . "'";
-    $result = mysqli_query($con, $sql);
-    $errorBD = showErrorBD($con, $result);
-    $userId = mysqli_fetch_row($result);
-    $userId = $userId[0];
-
-
-    $sql = "SELECT `project` FROM `projects` `p`
-        WHERE `users_id` = '" . $userId . "'";
-    $result = mysqli_query($con, $sql);
-    $errorBD = showErrorBD($con, $result);
-    $rows = mysqli_fetch_all($result);
-    $projects[] = 'Все';
-    foreach ($rows as $project) {
-        $projects[] = $project[0];
+        WHERE `name` = ?";
+    $stmt = mysqli_stmt_init($con);
+    if (!mysqli_stmt_prepare($stmt, $sql)) {
+        $errorBD = showErrorBD($con, false);
     }
+    mysqli_stmt_bind_param($stmt, 's', $_SESSION['name']);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $rows = mysqli_fetch_row($result);
+    $userId = $rows[0];
+
+    $countItemsInProject = countItemsInProject ($con, $userId);
+
+    $sql = "SELECT `id`, `project` FROM `projects` `p`
+        WHERE `users_id` = ?";
+    $stmt = mysqli_stmt_init($con);
+    if (!mysqli_stmt_prepare($stmt, $sql)) {
+        $errorBD = showErrorBD($con, false);
+    }
+    mysqli_stmt_bind_param($stmt, 'i', $userId);
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $rows = mysqli_fetch_all($result);
+
+    $projects[0]['project'] = 'Все';
+    $projects[0]['id'] = 0;
+    foreach ($rows as $project) {
+        $i++;
+        $projects[$i]['id'] = $project[0];
+        $projects[$i]['project'] = $project[1];
+            foreach ($countItemsInProject as $countItems) {
+                if ($projects[$i]['id'] == $countItems['projectId']) {
+                    $projects[$i]['countItems']  = $countItems['itemsCount'];
+                }
+            }
+        if (!$projects[$i]['countItems']) {
+            $projects[$i]['countItems'] = 0;
+        }
+        $contOfAllItems = $contOfAllItems+$projects[$i]['countItems'];
+    }
+    $projects[0]['countItems'] = $contOfAllItems;
 
 
     if ($_GET['task_is_done']) {
         $taskId = mysqli_real_escape_string($con, $_GET['task_is_done']);
         $sql = "SELECT `date_done` FROM `items`
-            WHERE `id` = '" . $taskId . "'";
-        $result = mysqli_query($con, $sql);
-        $errorBD = showErrorBD($errorBD, $con, $result);
+            WHERE `id` = ?";
+        $stmt = mysqli_stmt_init($con);
+        if (!mysqli_stmt_prepare($stmt, $sql)) {
+            $errorBD = showErrorBD($con, false);
+        }
+        mysqli_stmt_bind_param($stmt, 'i', $_GET['task_is_done']);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
         $taskDateDone = mysqli_fetch_row($result);
         $taskDateDone = ($taskDateDone[0] != false) ? false : date("Y-m-d", strtotime(now));
 
@@ -53,6 +83,7 @@ if ($_SESSION['name']) {
         }
     }
 
+
     if ($_POST['submit_task']) {
         if (!$_POST['name']) {
             $taskErrorName = 'form__input--error';
@@ -72,14 +103,12 @@ if ($_SESSION['name']) {
             if ($_POST['date']) {
                 $date = date("Y-m-d", strtotime($_POST['date']));
             }
-            $project = mysqli_real_escape_string($con, $_POST['project']);
-            $sql = "SELECT `id` FROM `projects`
-                WHERE `project` = '" . $project . "' AND
-                `users_id` = '" . $userId . "'";
-            $result = mysqli_query($con, $sql);
-            $errorBD = showErrorBD($con, $result);
-            $projectId = mysqli_fetch_row($result);
-            $projectId = $projectId[0];
+            foreach ($projects as $project) {
+                if ($project['project'] == $_POST['project']) {
+                    $projectId = $project['id'];
+                }
+            }
+
             addNewTask($_POST['name'], $url_file, $date, $userId, $projectId, $con);
         }
     }
@@ -110,75 +139,76 @@ if ($_SESSION['name']) {
         }
 
         if (isset($numb) && $projects[$numb] && ($projects[$numb] !== $projects[0])) {
-            $project = mysqli_real_escape_string($con, $projects[$numb]);
-            $sql = "SELECT `id` FROM `projects`
-                WHERE `project` = '" . $project . "' AND
-                `users_id` = '" . $userId . "'";
-            $result = mysqli_query($con, $sql);
-            $errorBD = showErrorBD($con, $result);
-            $projectId = mysqli_fetch_row($result);
-            $projectId = $projectId[0];
+            $projectId = $numb;
 
-            if (isset($itemFilter)) {
                 switch ($itemFilter) {
                     case 'today':
                         $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `project`, `url_file`  FROM `items` `i`
                             JOIN `projects` `p`
                             ON `i`.`projects_id` =  `p`.`id`
-                            WHERE `i`.`projects_id` = '" . $projectId . "' AND
+                            WHERE `i`.`projects_id` = ? AND
                             `i`.`date_deadline` = CURDATE() ";
                         break;
                     case 'tomorrow':
                         $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
                             JOIN `projects` `p`
                             ON `i`.`projects_id` =  `p`.`id`
-                            WHERE `i`.`projects_id` = '" . $projectId . "' AND
+                            WHERE `i`.`projects_id` = ? AND
                             `i`.`date_deadline` = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
                         break;
                     case 'late':
                         $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
                             JOIN `projects` `p`
                             ON `i`.`projects_id` =  `p`.`id`
-                            WHERE `i`.`projects_id` = '" . $projectId . "' AND
+                            WHERE `i`.`projects_id` = ? AND
                             `i`.`date_deadline` < CURDATE()";
                         break;
+                    default:
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
+                            JOIN `projects` `p`
+                            ON `i`.`projects_id` =  `p`.`id`
+                            WHERE `i`.`projects_id` = ?";
                 }
-            } else {
-                $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `url_file`, `project`  FROM `items` `i`
-                    JOIN `projects` `p`
-                    ON `i`.`projects_id` =  `p`.`id`
-                    WHERE `i`.`projects_id` = '" . $projectId . "'";
+
+            $stmt = mysqli_stmt_init($con);
+            if (!mysqli_stmt_prepare($stmt, $sql)) {
+                $errorBD = showErrorBD($con, false);
             }
-            $result = mysqli_query($con, $sql);
-            $errorBD = showErrorBD($con, $result);
+            mysqli_stmt_bind_param($stmt, 'i', $projectId);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             $rows = mysqli_fetch_all($result);
             $items = createItems($rows);
 
         } else {
-            if (isset($itemFilter)) {
                 switch ($itemFilter) {
                     case 'today':
                         $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`   FROM `items` 
-                            WHERE `users_id` = '" . $userId . "' AND
+                            WHERE `users_id` = ? AND
                             `date_deadline` = CURDATE() ";
                         break;
                     case 'tomorrow':
                         $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
-                            WHERE `users_id` = '" . $userId . "' AND
+                            WHERE `users_id` = ? AND
                             `date_deadline` = DATE_ADD(CURDATE(), INTERVAL 1 DAY)";
                         break;
                     case 'late':
                         $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
-                          WHERE `users_id` = '" . $userId . "' AND
+                          WHERE `users_id` = ? AND
                             `date_deadline` < CURDATE()";
                         break;
+                    default:
+                        $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
+                          WHERE `users_id` = ?";
                 }
-            } else {
-                $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`, `url_file`  FROM `items` 
-                    WHERE `users_id` = '" . $userId . "'";
+
+            $stmt = mysqli_stmt_init($con);
+            if (!mysqli_stmt_prepare($stmt, $sql)) {
+                $errorBD = showErrorBD($con, false);
             }
-            $result = mysqli_query($con, $sql);
-            $errorBD = showErrorBD($con, $result);
+            mysqli_stmt_bind_param($stmt, 'i', $userId);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
             $rows = mysqli_fetch_all($result);
             $items = createItems($rows);
         }
@@ -230,14 +260,22 @@ if ($_POST['submit_register']) {
     if(!htmlspecialchars($_POST['email'])) {
         $errorEmail = 'form__input--error';
         $error = true;
+    } else if(!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)){
+        $errorEmailExist = 'Неправильный формат почты';
+        $error = true;
     } else {
-        $email = mysqli_real_escape_string($con, $_POST['email']);
+
         $sql = "SELECT `email` FROM `users`
-                WHERE `email` = '" . $email . "'";
-        $result = mysqli_query($con, $sql);
-        $errorBD = showErrorBD($con, $result);
+                WHERE `email` = ?";
+        $stmt = mysqli_stmt_init($con);
+        if (!mysqli_stmt_prepare($stmt, $sql)) {
+            $errorBD = showErrorBD($con, false);
+        }
+        mysqli_stmt_bind_param($stmt, 's', $_POST['email']);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
         $userEmail = mysqli_fetch_row($result);
-        if ($userEmail[0]) {
+        if (isset($userEmail[0])) {
             $errorEmailExist = 'Такой email уже зарегистрирован:(';
             $error = true;
         }
@@ -250,13 +288,17 @@ if ($_POST['submit_register']) {
         $errorName = 'form__input--error';
         $error = true;
     } else {
-        $name = mysqli_real_escape_string($con, $_POST['name']);
         $sql = "SELECT `name` FROM `users`
-                WHERE `name` = '" . $name . "'";
-        $result = mysqli_query($con, $sql);
-        $errorBD = showErrorBD($con, $result);
+                WHERE `name` = ?";
+        $stmt = mysqli_stmt_init($con);
+        if (!mysqli_stmt_prepare($stmt, $sql)) {
+            $errorBD = showErrorBD($con, false);
+        }
+        mysqli_stmt_bind_param($stmt, 's', $_POST['name']);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
         $userName = mysqli_fetch_row($result);
-        if ($userName[0]) {
+        if (isset($userName[0])) {
             $errorNameExist = 'Такое имя уже зарегистрировано:(';
             $error = true;
         }
@@ -318,6 +360,7 @@ if (isset($errorBD)) {
     $content = include_template('templates/error.php', [
         'errorBD'=>$errorBD,
     ]);
+    print_r("Ошибка есть");
 }
 
 $html = include_template('templates/layout.php', [
