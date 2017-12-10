@@ -1,8 +1,5 @@
-<div class="modal"
-    <?php if($arrTemplate['add'] !== 'task') {
-        echo "hidden";
-    } ?> >
-    <button class="modal__close" type="button" name="button">Закрыть</button>
+<div class="modal"<?=($arrTemplate['add'] !== 'task')? " hidden":''?> >
+    <a href="/index.php"><button class="modal__close" type="button" name="button">Закрыть</button></a>
 
     <h2 class="modal__heading">Добавление задачи</h2>
 
@@ -49,15 +46,13 @@
     </form>
 </div>
 
-<div class="modal"
-    <?php if($arrTemplate['add'] !== 'project') {
-        echo "hidden";
-    } ?> >
-    <button class="modal__close" type="button" name="button">Закрыть</button>
+<div class="modal"<?=($arrTemplate['add'] !== 'project')? "hidden":''?> >
+    <a href="/index.php"><button class="modal__close" type="button" name="button">Закрыть</button></a>
 
     <h2 class="modal__heading">Добавление проекта</h2>
 
     <form class="form"  action="index.php" method="post">
+        <p class="error-message"><?=$arrTemplate['repeat']?></p>
         <div class="form__row">
             <label class="form__label" for="project_name">Название <sup>*</sup></label>
 
@@ -70,28 +65,3 @@
     </form>
 </div>
 
-<div class="modal"
-    <?php if($arrTemplate['log'] !== 'login') {
-        echo "hidden";
-    } ?> >
-    <button class="modal__close" type="button" name="button">Закрыть</button>
-
-    <h2 class="modal__heading">Войти</h2>
-
-    <form class="form"  action="index.php" method="post">
-        <div class="form__row">
-            <label class="form__label" for="login_name">NAME <sup>*</sup></label>
-
-            <input class="form__input <?=$arrTemplate['taskErrorName']?>" type="text" name="name" id="login_name" value="" placeholder="Введите логин">
-        </div>
-        <div class="form__row">
-            <label class="form__label" for="login_password">PASSWORD <sup>*</sup></label>
-
-            <input class="form__input <?=$arrTemplate['taskErrorName']?>" type="text" name="password" id="login_password" value="" placeholder="Введите пароль">
-        </div>
-
-        <div class="form__row form__row--controls">
-            <input class="button" type="submit" name="submit_project" value="Добавить">
-        </div>
-    </form>
-</div>

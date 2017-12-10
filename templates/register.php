@@ -20,44 +20,37 @@
                 <h2 class="content__main-heading">Регистрация аккаунта</h2>
 
                 <form class="form" action="index.php" method="post">
+                    <p class="error-message"><?=$arrTemplate['errorNameExist']?></p>
+                    <p class="error-message"><?=$arrTemplate['errorEmailExist']?></p>
                     <div class="form__row">
                         <label class="form__label" for="email">E-mail <sup>*</sup></label>
 
-                        <input class="form__input <?=$arrTemplate['taskErrorEmail']?>" type="email" name="email" id="email" value="" placeholder="Введите e-mail">
+                        <input class="form__input <?=$arrTemplate['errorEmail']?>" type="email" name="email" id="email" value="" placeholder="Введите e-mail">
 
-                        <p class="form__message
-                        <?php if (!$arrTemplate['taskErrorEmail']) {
-                            echo " hidden";
-                        } ?>
+                        <p class="form__message<?=(!$arrTemplate['errorEmail'])? " hidden":""?>
                         ">E-mail введён некорректно</p>
                     </div>
 
                     <div class="form__row">
                         <label class="form__label" for="password">Пароль <sup>*</sup></label>
 
-                        <input class="form__input <?=$arrTemplate['taskErrorPassword']?>" type="password" name="password" id="password" value="" placeholder="Введите пароль">
+                        <input class="form__input <?=$arrTemplate['errorPassword']?>" type="password" name="password" id="password" value="" placeholder="Введите пароль">
 
-                        <p class="form__message
-                        <?php if (!$arrTemplate['taskErrorPassword']) {
-                            echo " hidden";
-                        } ?>
+                        <p class="form__message<?=(!$arrTemplate['errorPassword'])? " hidden":""?>
                         ">Пароль введён некорректно</p>
                     </div>
 
                     <div class="form__row">
                         <label class="form__label" for="name">Имя <sup>*</sup></label>
 
-                        <input class="form__input <?=$arrTemplate['taskErrorName']?>" type="text" name="name" id="name" value="" placeholder="Введите имя">
+                        <input class="form__input <?=$arrTemplate['errorName']?>" type="text" name="name" id="name" value="" placeholder="Введите имя">
 
-                        <p class="form__message
-                        <?php if (!$arrTemplate['taskErrorName']) {
-                            echo " hidden";
-                        } ?>
+                        <p class="form__message<?=(!$arrTemplate['errorName'])? " hidden":""?>
                         ">Имя введёно некорректно</p>
                     </div>
 
                     <div class="form__row form__row--controls">
-                        <p class="error-message">Пожалуйста, исправьте ошибки в форме</p>
+                        <p class="error-message <?=(!$arrTemplate['errorName'] || !$arrTemplate['errorEmail'])? " hidden":""?>">Пожалуйста, исправьте ошибки в форме</p>
 
                         <input class="button" type="submit" name="submit_register" value="Зарегистрироваться">
                     </div>

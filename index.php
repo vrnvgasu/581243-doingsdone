@@ -1,116 +1,165 @@
 <?php
 session_start();
-require_once "function.php";
-require_once "userdata.php";
-require_once "init.php";
-
-// показывать или нет выполненные задачи
-$show_complete_tasks = rand(0, 1);
-
-// устанавливаем часовой пояс в Московское время
 date_default_timezone_set('Europe/Moscow');
-
-
-
-$projects = ['Все', 'Входящие', 'Учеба', 'Работа', 'Домашние дела', 'Авто'];
-$items = [
-        [
-            'title' => 'Собеседование в IT компании',
-            'date' => '01.06.2018',
-            'category' => 'Работа',
-            'state' => false
-        ],
-        [
-            'title' => 'Выполнить тестовое задание',
-            'date' => '25.05.2018',
-            'category' => 'Работа',
-            'state' => false
-        ],
-        [
-            'title' => 'Сделать задание первого раздела',
-            'date' => '21.04.2018',
-            'category' => 'Учеба',
-            'state' => true
-        ],
-        [
-            'title' => 'Встреча с другом',
-            'date' => '22.04.2018',
-            'category' => 'Входящие',
-            'state' => false
-        ],
-        [
-            'title' => 'Купить корм для кота',
-            'date' => false,
-            'category' => 'Домашние дела',
-            'state' => false
-        ],
-        [
-            'title' => 'Заказать пиццу',
-            'date' => false,
-            'category' => 'Домашние дела',
-            'state' => false
-        ]
-    ];
+require_once "function.php";
+require_once "init.php";
+require_once "userdata.php";
 
 $title = 'Дела в порядке';
 
-if ($_POST['submit_task']) {
-    if(!$_POST['name']) {
-        $taskErrorName = 'form__input--error';
-        $error = true;
+if ($_SESSION['name']) {
+    $sql = "SELECT `id` FROM `users` 
+        WHERE `name` = '" . $_SESSION['name'] . "'";
+    $result = mysqli_query($con, $sql);
+    $errorBD = showErrorBD($con, $result);
+    $userId = mysqli_fetch_row($result);
+    $userId = $userId[0];
+
+
+    $sql = "SELECT `project` FROM `projects` `p`
+        WHERE `users_id` = '" . $userId . "'";
+    $result = mysqli_query($con, $sql);
+    $errorBD = showErrorBD($con, $result);
+    $rows = mysqli_fetch_all($result);
+    $projects[] = 'Все';
+    foreach ($rows as $project) {
+        $projects[] = $project[0];
     }
-    if(!$_POST['project']) {
-        $taskErrorProject = 'form__input--error';
-        $error = true;
-    }
-    if ($error) {
-        $add = 'task';
-        $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
-    } else {
-        addNewTask(htmlspecialchars($_REQUEST['name']), $_REQUEST['date'], $_REQUEST['project']);
-        if ($_FILES) {
-            addFile();
+
+
+    if ($_GET['task_is_done']) {
+        $taskId = mysqli_real_escape_string($con, $_GET['task_is_done']);
+        $sql = "SELECT `date_done` FROM `items`
+            WHERE `id` = '" . $taskId . "'";
+        $result = mysqli_query($con, $sql);
+        $errorBD = showErrorBD($errorBD, $con, $result);
+        $taskDateDone = mysqli_fetch_row($result);
+        $taskDateDone = ($taskDateDone[0] != false) ? false : date("Y-m-d", strtotime(now));
+
+        if ($taskDateDone[0] == false) {
+            $sql = "UPDATE `items`
+            SET `date_done` = DEFAULT 
+            WHERE `id` = ?";
+            $stmt = mysqli_prepare($con, $sql);
+            mysqli_stmt_bind_param($stmt, 'i', intval($_GET['task_is_done']));
+            mysqli_stmt_execute($stmt);
+        } else {
+            $sql = "UPDATE `items`
+            SET `date_done` = ?
+            WHERE `id` = ?";
+            $stmt = mysqli_prepare($con, $sql);
+            mysqli_stmt_bind_param($stmt, 'si', $taskDateDone, intval($_GET['task_is_done']));
+            mysqli_stmt_execute($stmt);
         }
     }
-}
-if ($_POST['submit_project']) {
-    if(!$_POST['name']) {
-        $taskErrorName = 'form__input--error';
-        $error = true;
+
+    if ($_POST['submit_task']) {
+        if (!$_POST['name']) {
+            $taskErrorName = 'form__input--error';
+            $error = true;
+        }
+        if (!$_POST['project']) {
+            $taskErrorProject = 'form__input--error';
+            $error = true;
+        }
+        if ($error) {
+            $add = 'task';
+            $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+        } else {
+            if ($_FILES['preview']['size'] > 0) {
+                $url_file = addFile();
+            }
+            if ($_POST['date']) {
+                $date = date("Y-m-d", strtotime($_POST['date']));
+            }
+            $project = mysqli_real_escape_string($con, $_POST['project']);
+            $sql = "SELECT `id` FROM `projects`
+                WHERE `project` = '" . $project . "' AND
+                `users_id` = '" . $userId . "'";
+            $result = mysqli_query($con, $sql);
+            $errorBD = showErrorBD($con, $result);
+            $projectId = mysqli_fetch_row($result);
+            $projectId = $projectId[0];
+            addNewTask($_POST['name'], $url_file, $date, $userId, $projectId, $con);
+        }
     }
-    if ($error) {
-        $add = 'project';
-        $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
-    } else {
-        addNewProject(htmlspecialchars($_REQUEST['name']));
+    if ($_POST['submit_project']) {
+        if (!$_POST['name']) {
+            $taskErrorName = 'form__input--error';
+            $error = true;
+        }
+        if ($error) {
+            $add = 'project';
+            $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+        } else {
+            $repeat = addNewProject(htmlspecialchars($_REQUEST['name']), $con, $userId);
+            if ($repeat) {
+                $add = 'project';
+                $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+            }
+        }
     }
-}
 
-if (isset($_GET['numb'])) {
-    $numb = htmlspecialchars($_GET['numb']);
-}
+// Формируем данные для основного шаблона
+    if ($_SESSION['name']) {
+        if (isset($_GET['numb'])) {
+            $numb = htmlspecialchars($_GET['numb']);
+        }
 
-$itemsForPrint = itemsForPrint ();
+        if (isset($numb) && $projects[$numb] && ($projects[$numb] !== $projects[0])) {
+            $project = mysqli_real_escape_string($con, $projects[$numb]);
+            $sql = "SELECT `id` FROM `projects`
+                WHERE `project` = '" . $project . "' AND
+                `users_id` = '" . $userId . "'";
+            $result = mysqli_query($con, $sql);
+            $errorBD = showErrorBD($con, $result);
+            $projectId = mysqli_fetch_row($result);
+            $projectId = $projectId[0];
 
-$content = include_template('templates/index.php', ['itemsForPrint'=>$itemsForPrint]);
-if ($_GET['numb'] && !$projects[$_GET['numb']]) {
-    $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
-}
+            $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `i`.`id`, `project`  FROM `items` `i`
+        JOIN `projects` `p`
+        ON `i`.`projects_id` =  `p`.`id`
+        WHERE `i`.`projects_id` = '" . $projectId . "'";
+            $result = mysqli_query($con, $sql);
+            $errorBD = showErrorBD($con, $result);
+            $rows = mysqli_fetch_all($result);
+            $items = createItems($rows);
 
-if (isset($_GET['add']) && !$_REQUEST['submit_task']) {
-    $add = htmlspecialchars($_GET['add']);
-    $form = showForm($add, $taskErrorName, $taskErrorProject, $projects);
-}
+        } else {
+            $sql = "SELECT `date_create`, `date_done`, `title`, DATE_FORMAT(`date_deadline`, '%d.%m.%Y'), `id`  FROM `items` 
+        WHERE `users_id` = '" . $userId . "'";
+            $result = mysqli_query($con, $sql);
+            $errorBD = showErrorBD($con, $result);
+            $rows = mysqli_fetch_all($result);
+            $items = createItems($rows);
+        }
 
-if (htmlspecialchars($_GET['show_completed']) == 1) {
-    $show_completed = htmlspecialchars($_GET['show_completed']);
-    if (isset($_COOKIE['show_completed'])) {
-        unset($_COOKIE['show_completed']);
-        setcookie ('show_completed','', time()-3600);
-    } else {
-        setcookie ('show_completed', 1, time()+3600);
+        if (!$items) {
+            $items = array();
+        }
     }
-    header("Location: index.php");
+
+
+    $content = include_template('templates/index.php', ['itemsForPrint' => $items]);
+    if ($_GET['numb'] && !$projects[$_GET['numb']]) {
+        $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
+    }
+
+    if (isset($_GET['add']) && !$_REQUEST['submit_task']) {
+        $add = htmlspecialchars($_GET['add']);
+        $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+    }
+
+    if (htmlspecialchars($_GET['show_completed']) == 1) {
+        $show_completed = htmlspecialchars($_GET['show_completed']);
+        if (isset($_COOKIE['show_completed'])) {
+            unset($_COOKIE['show_completed']);
+            setcookie('show_completed', '', time() - 3600);
+        } else {
+            setcookie('show_completed', 1, time() + 3600);
+        }
+        header("Location: index.php");
+    }
 }
 
 if (!$_POST['submit_register']&&!$_POST['submit_login']) {
@@ -131,21 +180,46 @@ if (!isset($_SESSION['login'])) {
 }
 if ($_POST['submit_register']) {
     if(!htmlspecialchars($_POST['email'])) {
-        $taskErrorEmail = 'form__input--error';
+        $errorEmail = 'form__input--error';
         $error = true;
+    } else {
+        $email = mysqli_real_escape_string($con, $_POST['email']);
+        $sql = "SELECT `email` FROM `users`
+                WHERE `email` = '" . $email . "'";
+        $result = mysqli_query($con, $sql);
+        $errorBD = showErrorBD($con, $result);
+        $userEmail = mysqli_fetch_row($result);
+        if ($userEmail[0]) {
+            $errorEmailExist = 'Такой email уже зарегистрирован:(';
+            $error = true;
+        }
     }
     if(!htmlspecialchars($_POST['password'])) {
-        $taskErrorPassword = 'form__input--error';
+        $errorPassword = 'form__input--error';
         $error = true;
     }
     if(!htmlspecialchars($_POST['name'])) {
-        $taskErrorName = 'form__input--error';
+        $errorName = 'form__input--error';
         $error = true;
+    } else {
+        $name = mysqli_real_escape_string($con, $_POST['name']);
+        $sql = "SELECT `name` FROM `users`
+                WHERE `name` = '" . $name . "'";
+        $result = mysqli_query($con, $sql);
+        $errorBD = showErrorBD($con, $result);
+        $userName = mysqli_fetch_row($result);
+        if ($userName[0]) {
+            $errorNameExist = 'Такое имя уже зарегистрировано:(';
+            $error = true;
+        }
     }
     if ($error) {
         $notLog = include_template('templates/register.php', [
-            'taskErrorPassword'=>$taskErrorPassword,
-            'taskErrorName'=>$taskErrorName
+            'errorPassword'=>$errorPassword,
+            'errorName'=>$errorName,
+            'errorEmail'=>$errorEmail,
+            'errorEmailExist'=>$errorEmailExist,
+            'errorNameExist'=>$errorNameExist
         ]);
     } else {
         $newUser = [
@@ -153,16 +227,23 @@ if ($_POST['submit_register']) {
             'name' => htmlspecialchars($_POST['name']),
             'password' => password_hash( htmlspecialchars($_POST['password']), PASSWORD_DEFAULT)
         ];
+
+        $sql = "INSERT INTO `users` (`id`, `register_date`, `email`, `name`, `password`, `contacts`)
+            VALUES (NULL, NOW(), ?, ?,'" . $newUser['password'] . "', ?)";
+        $stmt = mysqli_prepare($con, $sql);
+        mysqli_stmt_bind_param($stmt, 'sss', $newUser['email'], $newUser['name'], $newUser['contacts']);
+        mysqli_stmt_execute($stmt);
+
         $users[] = $newUser;
         $User = [
             'name' => htmlspecialchars($_POST['name']),
             'password' => htmlspecialchars($_POST['password'])
         ];
-        authentication($User);
+        authentication($User, $con);
     }
 }
+
 if ($_POST['submit_login']) {
-    //print_r('asldkfjasldkfj');
     if(!htmlspecialchars($_POST['name'])) {
         $taskErrorName = 'form__input--error';
         $error = true;
@@ -181,12 +262,11 @@ if ($_POST['submit_login']) {
             'name' => htmlspecialchars($_POST['name']),
             'password' => htmlspecialchars($_POST['password'])
         ];
-        $notLog = authentication($User);
+        $notLog = authentication($User, $con);
     }
 }
 
 if (isset($errorBD)) {
-    print_r($errorBD);
     $content = include_template('templates/error.php', [
         'errorBD'=>$errorBD,
     ]);
@@ -201,73 +281,12 @@ $html = include_template('templates/layout.php', [
     'numb'=>$numb,
     'overlay'=>$form['overlay'],
     'notLog'=>$notLog,
-    'session'=>$session]);
+    'session'=>$session,
+    'con'=>$con,
+    'userId'=>$userId]);
 
 print_r($html);
 
 
-function countItemsInProject ($project, $items) {
-    $count = 0;
-    if ($project === 'Все') {
-        return count($items);
-    }
-    foreach ($items as $item) {
-        if ($item['category'] === $project) $count++;
-    }
 
-    return $count;
-}
 
-function showForm($add, $taskErrorName, $taskErrorProject, $projects) {
-    $overlay = 'overlay';
-    $modal = include_template('templates/form.php',
-            ['add'=>$add,
-            'taskErrorProject'=>$taskErrorProject,
-            'taskErrorName'=>$taskErrorName,
-            'projects'=>$projects]);
-    $form = ['overlay'=>$overlay, 'modal'=>$modal];
-    return $form;
-}
-
-function addNewTask($title, $date = false, $category, $state = false) {
-    $newTask = [
-        'title' => $title,
-        'date' => $date,
-        'category' => $category,
-        'state' => $state
-    ];
-    global $items;
-    array_unshift($items, $newTask);
-
-};
-
-function addNewProject($newProject) {
-    global $projects;
-    array_splice($projects, 1, 0, $newProject);
-}
-
-function itemsForPrint () {
-    global $numb;
-    global $projects;
-    global $items;
-    $itemsForPrint = array();
-    if (isset($numb) && $projects[$numb] && ($projects[$numb] !== $projects[0])) {
-        foreach ($items as $item) {
-            if ($item['category'] === $projects[$_GET['numb']]) {
-                $itemsForPrint[] = $item;
-            }
-        }
-    } else {
-        foreach ($items as $item) {
-            $itemsForPrint[] = $item;
-        }
-    }
-    return $itemsForPrint;
-}
-
-function addFile () {
-    $file_name = $_FILES['preview']['name'];
-    $file_path = __DIR__ . '/uploads/';
-
-    move_uploaded_file($_FILES['preview']['tmp_name'], $file_path.$file_name);
-}

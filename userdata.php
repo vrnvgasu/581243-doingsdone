@@ -1,5 +1,6 @@
 <?php
 
+
 // пользователи для аутентификации
 $users = [
     [
@@ -19,14 +20,18 @@ $users = [
     ]
 ];
 
-function authentication($User) {
-    global $users;
-    foreach ($users as $user) {
-        if (($user['name'] === $User['name']) &&
-            password_verify($User['password'], $user['password']) ) {
+function authentication($User, $con) {
+    $sql = "SELECT * FROM `users`";
+    $result = mysqli_query($con, $sql);
+    $errorBD = showErrorBD($con, $result);
+    $usersRow = mysqli_fetch_all($result);
+
+    foreach ($usersRow as $user) {
+        if (($user[3] === $User['name']) &&
+            password_verify($User['password'], $user[4]) ) {
 
             $_SESSION['login'] = true;
-            $_SESSION['name'] = $user['name'];
+            $_SESSION['name'] = $user[3];
             header("Location: index.php");
         }
     }
