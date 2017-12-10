@@ -219,8 +219,16 @@ if ($_SESSION['name']) {
     }
 
     $content = include_template('templates/index.php', ['itemsForPrint' => $items, 'itemFilter'=>$itemFilter]);
-    if ($_GET['numb'] && !$projects[$_GET['numb']]) {
-        $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
+    if ($_GET['numb']) {
+        $projectNumb = true;
+        foreach ($projects as $project) {
+            if ($project['id'] == htmlspecialchars($_GET['numb'])) {
+                $projectNumb = false;
+                }
+        }
+        if ($projectNumb) {
+            $content = '<h1 class="error-message">error 404 / Такой страницы не существует:(</h1>';
+        }
     }
 
     if (isset($_GET['add']) && !$_REQUEST['submit_task']) {
