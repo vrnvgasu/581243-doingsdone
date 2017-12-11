@@ -22,7 +22,7 @@ function createItems($row) {
     $item['title'] = $row['title'];
     $item['date'] =  $row["DATE_FORMAT(`date_deadline`, '%d.%m.%Y')"];
     $item['category'] = $row['project'];
-    $item['id'] = $item['id'];
+    $item['id'] = $row['id'];
     if ($row['date_done']) {
         $item['state'] = true;
     } else {
