@@ -31,26 +31,25 @@ if ($_SESSION['name']) {
     mysqli_stmt_bind_param($stmt, 'i', $userId);
     mysqli_stmt_execute($stmt);
     $result = mysqli_stmt_get_result($stmt);
-    $rows = mysqli_fetch_all($result);
-
     $projects[0]['project'] = 'Все';
     $projects[0]['id'] = 0;
-    foreach ($rows as $project) {
-        $i++;
-        $projects[$i]['id'] = $project[0];
-        $projects[$i]['project'] = $project[1];
+    while ($row = mysqli_fetch_array($result)) {
+        $project['id'] = $row['id'];
+        $project['project'] = $row['project'];
+        if (isset($countItemsInProject)) {
             foreach ($countItemsInProject as $countItems) {
-                if ($projects[$i]['id'] == $countItems['projectId']) {
-                    $projects[$i]['countItems']  = $countItems['itemsCount'];
+                if ($project['id'] == $countItems['projectId']) {
+                    $project['countItems'] = $countItems['itemsCount'];
                 }
             }
-        if (!$projects[$i]['countItems']) {
-            $projects[$i]['countItems'] = 0;
         }
-        $contOfAllItems = $contOfAllItems+$projects[$i]['countItems'];
+        if (!$project['countItems']) {
+            $project['countItems'] = 0;
+        }
+        $contOfAllItems = $contOfAllItems+$project['countItems'];
+        $projects[] = $project;
     }
     $projects[0]['countItems'] = $contOfAllItems;
-
 
     if ($_GET['task_is_done']) {
         $taskId = mysqli_real_escape_string($con, $_GET['task_is_done']);
@@ -82,7 +81,6 @@ if ($_SESSION['name']) {
             mysqli_stmt_execute($stmt);
         }
     }
-
 
     if ($_POST['submit_task']) {
         if (!$_POST['name']) {
@@ -129,7 +127,6 @@ if ($_SESSION['name']) {
         }
     }
 
-// Формируем данные для основного шаблона
     if ($_SESSION['name']) {
         if (isset($_GET['numb'])) {
             $numb = htmlspecialchars($_GET['numb']);
@@ -137,9 +134,14 @@ if ($_SESSION['name']) {
         if (isset($_GET['item-filter'])) {
             $itemFilter = htmlspecialchars($_GET['item-filter']);
         }
-
-        if (isset($numb) && $projects[$numb] && ($projects[$numb] !== $projects[0])) {
+        foreach ($projects as $project) {
+            if ($project['id'] == $numb) {
+                $thisProjectId = $numb;
+            }
+        }
+        if (isset($numb) && $thisProjectId && ($thisProjectId !== $projects[0]['id'])) {
             $projectId = $numb;
+
 
                 switch ($itemFilter) {
                     case 'today':
@@ -177,8 +179,9 @@ if ($_SESSION['name']) {
             mysqli_stmt_bind_param($stmt, 'i', $projectId);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
-            $rows = mysqli_fetch_all($result);
-            $items = createItems($rows);
+            while ($row = mysqli_fetch_array($result)) {
+                $items[] = createItems($row);
+            }
 
         } else {
                 switch ($itemFilter) {
@@ -209,8 +212,9 @@ if ($_SESSION['name']) {
             mysqli_stmt_bind_param($stmt, 'i', $userId);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
-            $rows = mysqli_fetch_all($result);
-            $items = createItems($rows);
+            while ($row = mysqli_fetch_array($result)) {
+                $items[] = createItems($row);
+            }
         }
 
         if (!$items) {
@@ -253,7 +257,6 @@ if (!$_POST['submit_register']&&!$_POST['submit_login']) {
     $register = include_template('templates/register.php', []);
     $login = include_template('templates/login.php', []);
 }
-
 
 if (!isset($_SESSION['login'])) {
     if (htmlspecialchars($_GET['log']) === 'in') {

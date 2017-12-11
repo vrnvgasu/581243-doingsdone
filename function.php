@@ -17,24 +17,19 @@ function showErrorBDInFunction($con, $result) {
     }
 }
 
-function createItems($rows) {
-    $i = 0;
-    foreach ($rows as $item) {
-        $items[$i]['title'] = $item[2];
-        $items[$i]['date'] = $item[3];
-        $items[$i]['category'] = $item[6];
-        $items[$i]['id'] = $item[4];
-        if ($item[1]) {
-            $items[$i]['state'] = true;
-        } else {
-            $items[$i]['state'] = false;
-        }
-        $items[$i]['file'] = $item[5];
-
-        $i++;
+function createItems($row) {
+    $item = [];
+    $item['title'] = $row['title'];
+    $item['date'] =  $row["DATE_FORMAT(`date_deadline`, '%d.%m.%Y')"];
+    $item['category'] = $row['project'];
+    $item['id'] = $item['id'];
+    if ($row['date_done']) {
+        $item['state'] = true;
+    } else {
+        $item['state'] = false;
     }
 
-    return $items;
+    return $item;
 }
 
 function countItemsInProject ($con, $userId) {
