@@ -39,15 +39,18 @@ if ($_SESSION['name']) {
         if (isset($countItemsInProject)) {
             foreach ($countItemsInProject as $countItems) {
                 if ($project['id'] == $countItems['projectId']) {
-                    $project['countItems'] = $countItems['itemsCount'];
+                    $count = $countItems['itemsCount'];
                 }
             }
         }
-        if (!$project['countItems']) {
+        if ($count) {
+            $project['countItems'] = $count;
+        }else {
             $project['countItems'] = 0;
         }
         $contOfAllItems = $contOfAllItems+$project['countItems'];
         $projects[] = $project;
+        $count = 0;
     }
     $projects[0]['countItems'] = $contOfAllItems;
 
