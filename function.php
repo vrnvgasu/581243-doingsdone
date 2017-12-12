@@ -22,7 +22,7 @@ function createItems($row) {
     $item['title'] = $row['title'];
     $item['date'] =  $row["DATE_FORMAT(`date_deadline`, '%d.%m.%Y')"];
     $item['category'] = $row['project'];
-    $item['id'] = $item['id'];
+    $item['id'] = $row['id'];
     if ($row['date_done']) {
         $item['state'] = true;
     } else {
@@ -108,7 +108,7 @@ function addFile () {
         $file_name = getmypid() .date('U'). $_FILES['preview']['name'];
     }
 
-    $file_path = __DIR__ . '\\uploads\\' . $file_name;
+    $file_path = join(DIRECTORY_SEPARATOR,[__DIR__, $file_name]);
     move_uploaded_file($_FILES['preview']['tmp_name'], $file_path);
     return $file_path;
 }

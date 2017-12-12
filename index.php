@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 'On');
 session_start();
 date_default_timezone_set('Europe/Moscow');
 require_once "function.php";
@@ -7,7 +9,7 @@ require_once "userdata.php";
 
 $title = 'Дела в порядке';
 
-if ($_SESSION['name']) {
+if (!empty($_SESSION['name'])) {
     $sql = "SELECT `id` FROM `users` 
         WHERE `name` = ?";
     $stmt = mysqli_stmt_init($con);
@@ -33,6 +35,7 @@ if ($_SESSION['name']) {
     $result = mysqli_stmt_get_result($stmt);
     $projects[0]['project'] = 'Все';
     $projects[0]['id'] = 0;
+    $contOfAllItems = 0;
     while ($row = mysqli_fetch_array($result)) {
         $project['id'] = $row['id'];
         $project['project'] = $row['project'];
@@ -43,7 +46,7 @@ if ($_SESSION['name']) {
                 }
             }
         }
-        if (!$project['countItems']) {
+        if (!isset($project['countItems'])) {
             $project['countItems'] = 0;
         }
         $contOfAllItems = $contOfAllItems+$project['countItems'];
@@ -51,7 +54,7 @@ if ($_SESSION['name']) {
     }
     $projects[0]['countItems'] = $contOfAllItems;
 
-    if ($_GET['task_is_done']) {
+    if (isset($_GET['task_is_done'])) {
         $taskId = mysqli_real_escape_string($con, $_GET['task_is_done']);
         $sql = "SELECT `date_done` FROM `items`
             WHERE `id` = ?";
@@ -82,7 +85,7 @@ if ($_SESSION['name']) {
         }
     }
 
-    if ($_POST['submit_task']) {
+    if (isset($_POST['submit_task'])) {
         if (!$_POST['name']) {
             $taskErrorName = 'form__input--error';
             $error = true;
@@ -110,7 +113,7 @@ if ($_SESSION['name']) {
             addNewTask($_POST['name'], $url_file, $date, $userId, $projectId, $con);
         }
     }
-    if ($_POST['submit_project']) {
+    if (isset($_POST['submit_project'])) {
         if (!$_POST['name']) {
             $taskErrorName = 'form__input--error';
             $error = true;
@@ -133,10 +136,14 @@ if ($_SESSION['name']) {
         }
         if (isset($_GET['item-filter'])) {
             $itemFilter = htmlspecialchars($_GET['item-filter']);
+        } else {
+            $itemFilter = 'all';
         }
         foreach ($projects as $project) {
-            if ($project['id'] == $numb) {
-                $thisProjectId = $numb;
+            if (isset($numb)) {
+                if ($project['id'] == $numb) {
+                    $thisProjectId = $numb;
+                }
             }
         }
         if (isset($numb) && $thisProjectId && ($thisProjectId !== $projects[0]['id'])) {
@@ -217,13 +224,13 @@ if ($_SESSION['name']) {
             }
         }
 
-        if (!$items) {
+        if (!isset($items)) {
             $items = array();
         }
     }
 
     $content = include_template('templates/index.php', ['itemsForPrint' => $items, 'itemFilter'=>$itemFilter]);
-    if ($_GET['numb']) {
+    if (isset($_GET['numb'])) {
         $projectNumb = true;
         foreach ($projects as $project) {
             if ($project['id'] == htmlspecialchars($_GET['numb'])) {
@@ -235,24 +242,26 @@ if ($_SESSION['name']) {
         }
     }
 
-    if (isset($_GET['add']) && !$_REQUEST['submit_task']) {
+    if (isset($_GET['add']) && !isset($_REQUEST['submit_task'])) {
         $add = htmlspecialchars($_GET['add']);
-        $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+        $form = showForm($add, isset($taskErrorName)? $taskErrorName:false, isset($taskErrorProject)? $taskErrorProject:false, $projects, isset($repeat)? $repeat:false);
     }
 
-    if (htmlspecialchars($_GET['show_completed']) == 1) {
-        $show_completed = htmlspecialchars($_GET['show_completed']);
-        if (isset($_COOKIE['show_completed'])) {
-            unset($_COOKIE['show_completed']);
-            setcookie('show_completed', '', time() - 3600);
-        } else {
-            setcookie('show_completed', 1, time() + 3600);
+    if (isset($_GET['show_completed'])) {
+        if (htmlspecialchars($_GET['show_completed']) == 1) {
+            $show_completed = htmlspecialchars($_GET['show_completed']);
+            if (isset($_COOKIE['show_completed'])) {
+                unset($_COOKIE['show_completed']);
+                setcookie('show_completed', '', time() - 3600);
+            } else {
+                setcookie('show_completed', 1, time() + 3600);
+            }
+            header("Location: index.php");
         }
-        header("Location: index.php");
     }
 }
 
-if (!$_POST['submit_register']&&!$_POST['submit_login']) {
+if (!isset($_POST['submit_register'])&&!isset($_POST['submit_login'])) {
     $guest = include_template('templates/guest.php', []);
     $register = include_template('templates/register.php', []);
     $login = include_template('templates/login.php', []);
@@ -267,7 +276,7 @@ if (!isset($_SESSION['login'])) {
         $notLog = $guest;
     }
 }
-if ($_POST['submit_register']) {
+if (isset($_POST['submit_register'])) {
     if(!htmlspecialchars($_POST['email'])) {
         $errorEmail = 'form__input--error';
         $error = true;
@@ -316,11 +325,11 @@ if ($_POST['submit_register']) {
     }
     if ($error) {
         $notLog = include_template('templates/register.php', [
-            'errorPassword'=>$errorPassword,
-            'errorName'=>$errorName,
-            'errorEmail'=>$errorEmail,
-            'errorEmailExist'=>$errorEmailExist,
-            'errorNameExist'=>$errorNameExist
+            'errorPassword'=>(isset($errorPassword)? $errorPassword:false),
+            'errorName'=>(isset($errorName)? $errorName:false),
+            'errorEmail'=>(isset($errorEmail)? $errorEmail:false),
+            'errorEmailExist'=>(isset($errorEmailExist)? $errorEmailExist:false),
+            'errorNameExist'=>(isset($errorNameExist)? $errorNameExist:false)
         ]);
     } else {
         $newUser = [
@@ -344,7 +353,7 @@ if ($_POST['submit_register']) {
     }
 }
 
-if ($_POST['submit_login']) {
+if (isset($_POST['submit_login'])) {
     if(!htmlspecialchars($_POST['name'])) {
         $taskErrorName = 'form__input--error';
         $error = true;
@@ -355,8 +364,8 @@ if ($_POST['submit_login']) {
     }
     if ($error) {
         $notLog = include_template('templates/login.php', [
-            'taskErrorPassword'=>$taskErrorPassword,
-            'taskErrorName'=>$taskErrorName
+            'taskErrorPassword'=>(isset($taskErrorPassword)? $taskErrorPassword:false),
+            'taskErrorName'=>(isset($taskErrorName)? $taskErrorName:false)
         ]);
     } else {
         $User = [
@@ -374,17 +383,18 @@ if (isset($errorBD)) {
     print_r("Ошибка есть");
 }
 
+
+
 $html = include_template('templates/layout.php', [
     'content'=>$content,
-    'modal'=>$form['modal'],
-    'projects'=>$projects,
-    'items'=>$items,
-    'title'=>$title,
-    'numb'=>$numb,
-    'overlay'=>$form['overlay'],
-    'notLog'=>$notLog,
-    'session'=>$session,
-    'con'=>$con,
-    'userId'=>$userId]);
+    'modal'=>(isset($form['modal'])? $form['modal']:false),
+    'projects'=>(isset($projects)? $projects:false),
+    'title'=>(isset($title)? $title:false),
+    'numb'=>(isset($numb)? $numb:false),
+    'overlay'=>(isset($form['overlay'])? $form['overlay']:false),
+    'notLog'=>(isset($notLog)? $notLog:false),
+    'session'=>(isset($session)? $session:false),
+    'con'=>(isset($con)? $con:false),
+    'userId'=>(isset($userId)? $userId:false)]);
 
 print_r($html);
