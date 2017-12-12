@@ -16,14 +16,7 @@
 
                     <label class="checkbox">
                         <a href="?show_completed=1">
-                            <?php
-                            if (isset($_COOKIE['show_completed'])) {
-                                $show_completed = $_COOKIE['show_completed'];
-                            } else {
-                                $show_completed = 0;
-                            }
-                            ?>
-                            <input class="checkbox__input visually-hidden" type="checkbox"<?=($show_completed === 1)? "checked":''?>>
+                            <input class="checkbox__input visually-hidden" type="checkbox"<?=(isset($_COOKIE['show_completed']))? " checked":''?>>
                             <span class="checkbox__text">Показывать выполненные</span>
                         </a>
                     </label>

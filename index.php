@@ -254,9 +254,7 @@ if (!empty($_SESSION['name'])) {
         $form = showForm($add, isset($taskErrorName)? $taskErrorName:false, isset($taskErrorProject)? $taskErrorProject:false, $projects, isset($repeat)? $repeat:false);
     }
 
-    if (isset($_GET['show_completed'])) {
-        if (htmlspecialchars($_GET['show_completed']) == 1) {
-            $show_completed = htmlspecialchars($_GET['show_completed']);
+        if (isset($_GET['show_completed'])) {
             if (isset($_COOKIE['show_completed'])) {
                 unset($_COOKIE['show_completed']);
                 setcookie('show_completed', '', time() - 3600);
@@ -264,8 +262,8 @@ if (!empty($_SESSION['name'])) {
                 setcookie('show_completed', 1, time() + 3600);
             }
             header("Location: index.php");
+
         }
-    }
 }
 
 if (!isset($_POST['submit_register'])&&!isset($_POST['submit_login'])) {
