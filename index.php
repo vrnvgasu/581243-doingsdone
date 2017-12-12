@@ -42,15 +42,19 @@ if (!empty($_SESSION['name'])) {
         if (isset($countItemsInProject)) {
             foreach ($countItemsInProject as $countItems) {
                 if ($project['id'] == $countItems['projectId']) {
-                    $project['countItems'] = $countItems['itemsCount'];
+                    $count = $countItems['itemsCount'];
                 }
             }
         }
-        if (!isset($project['countItems'])) {
+
+        if (isset($count)) {
+            $project['countItems'] = $count;
+        }else {
             $project['countItems'] = 0;
         }
         $contOfAllItems = $contOfAllItems+$project['countItems'];
         $projects[] = $project;
+        $count = 0;
     }
     $projects[0]['countItems'] = $contOfAllItems;
 
@@ -66,7 +70,7 @@ if (!empty($_SESSION['name'])) {
         mysqli_stmt_execute($stmt);
         $result = mysqli_stmt_get_result($stmt);
         $taskDateDone = mysqli_fetch_row($result);
-        $taskDateDone = ($taskDateDone[0] != false) ? false : date("Y-m-d", strtotime(now));
+        $taskDateDone = ($taskDateDone[0] != false) ? false : date("Y-m-d", strtotime('now'));
 
         if ($taskDateDone[0] == false) {
             $sql = "UPDATE `items`
@@ -94,9 +98,11 @@ if (!empty($_SESSION['name'])) {
             $taskErrorProject = 'form__input--error';
             $error = true;
         }
-        if ($error) {
+        if (isset($error)) {
             $add = 'task';
-            $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+            $form = showForm($add, isset($taskErrorName)? $taskErrorName:false,
+                isset($taskErrorProject)? $taskErrorProject:false, $projects,
+                isset($repeat)? $repeat:false);
         } else {
             if ($_FILES['preview']['size'] > 0) {
                 $url_file = addFile();
@@ -118,14 +124,17 @@ if (!empty($_SESSION['name'])) {
             $taskErrorName = 'form__input--error';
             $error = true;
         }
-        if ($error) {
+        if (isset($error)) {
             $add = 'project';
-            $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+            $form = showForm($add, isset($taskErrorName)? $taskErrorName:false,
+                isset($taskErrorProject)? $taskErrorProject:false,
+                isset($projects)? $projects:false, isset($repeat)? $repeat:false);
         } else {
             $repeat = addNewProject(htmlspecialchars($_REQUEST['name']), $con, $userId);
             if ($repeat) {
                 $add = 'project';
-                $form = showForm($add, $taskErrorName, $taskErrorProject, $projects, $repeat);
+                $form = showForm($add, isset($taskErrorName)? $taskErrorName:false,
+                    isset($taskErrorProject)? $taskErrorProject:false, $projects, $repeat);
             }
         }
     }
@@ -262,18 +271,20 @@ if (!empty($_SESSION['name'])) {
 }
 
 if (!isset($_POST['submit_register'])&&!isset($_POST['submit_login'])) {
-    $guest = include_template('templates/guest.php', []);
+    //$guest = include_template('templates/guest.php', []);
     $register = include_template('templates/register.php', []);
     $login = include_template('templates/login.php', []);
 }
 
 if (!isset($_SESSION['login'])) {
-    if (htmlspecialchars($_GET['log']) === 'in') {
-        $notLog = $login;
-    } else if (htmlspecialchars($_GET['log']) === 'register') {
-        $notLog = $register;
-    } else {
-        $notLog = $guest;
+    if(isset($_GET['log'])) {
+        if (htmlspecialchars($_GET['log']) === 'in') {
+            $notLog = $login;
+        } else if (htmlspecialchars($_GET['log']) === 'register') {
+            $notLog = $register;
+        }
+    }else {
+        $notLog = include_template('templates/guest.php', []);;
     }
 }
 if (isset($_POST['submit_register'])) {
@@ -323,7 +334,7 @@ if (isset($_POST['submit_register'])) {
             $error = true;
         }
     }
-    if ($error) {
+    if (isset($error)) {
         $notLog = include_template('templates/register.php', [
             'errorPassword'=>(isset($errorPassword)? $errorPassword:false),
             'errorName'=>(isset($errorName)? $errorName:false),
@@ -362,7 +373,7 @@ if (isset($_POST['submit_login'])) {
         $taskErrorPassword = 'form__input--error';
         $error = true;
     }
-    if ($error) {
+    if (isset($error)) {
         $notLog = include_template('templates/login.php', [
             'taskErrorPassword'=>(isset($taskErrorPassword)? $taskErrorPassword:false),
             'taskErrorName'=>(isset($taskErrorName)? $taskErrorName:false)
@@ -386,7 +397,7 @@ if (isset($errorBD)) {
 
 
 $html = include_template('templates/layout.php', [
-    'content'=>$content,
+    'content'=>(isset($content)? $content:false),
     'modal'=>(isset($form['modal'])? $form['modal']:false),
     'projects'=>(isset($projects)? $projects:false),
     'title'=>(isset($title)? $title:false),

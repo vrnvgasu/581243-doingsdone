@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 
-<?php if(!$_SESSION['login']): ?>
+<?php if(!isset($_SESSION['login'])): ?>
     <?=$arrTemplate['notLog']?>
 <?php else: ?>
     <body class="<?=$arrTemplate['overlay']?>">
@@ -41,12 +41,14 @@
 
                 <nav class="main-navigation">
                     <ul class="main-navigation__list">
-                        <?php foreach ($arrTemplate['projects'] as $project): ?>
-                        <li class="main-navigation__list-item<?=($project['id']==intval($_GET['numb']))? ' main-navigation__list-item--active':''?>">
-                            <a class="main-navigation__list-item-link" href="?numb=<?=$project['id']?>"><?=$project['project']?></a>
-                            <span class="main-navigation__list-item-count"><?=$project['countItems']?></span>
-                        </li>
-                        <?php endforeach; ?>
+                        <?php if (isset($arrTemplate['projects'])): ?>
+                            <?php foreach ($arrTemplate['projects'] as $project): ?>
+                            <li class="main-navigation__list-item<?=($project['id']==$arrTemplate['numb'])? ' main-navigation__list-item--active':''?>">
+                                <a class="main-navigation__list-item-link" href="?numb=<?=$project['id']?>"><?=$project['project']?></a>
+                                <span class="main-navigation__list-item-count"><?=$project['countItems']?></span>
+                            </li>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
                     </ul>
                 </nav>
 

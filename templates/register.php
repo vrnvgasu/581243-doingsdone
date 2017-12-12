@@ -20,8 +20,8 @@
                 <h2 class="content__main-heading">Регистрация аккаунта</h2>
 
                 <form class="form" action="index.php" method="post">
-                    <p class="error-message"><?=$arrTemplate['errorNameExist']?></p>
-                    <p class="error-message"><?=$arrTemplate['errorEmailExist']?></p>
+                    <p class="error-message"><?=isset($arrTemplate['errorNameExist'])? $arrTemplate['errorNameExist']:''?></p>
+                    <p class="error-message"><?=isset($arrTemplate['errorEmailExist'])? $arrTemplate['errorEmailExist']:''?></p>
                     <div class="form__row">
                         <label class="form__label" for="email">E-mail <sup>*</sup></label>
 
